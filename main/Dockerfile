@@ -55,35 +55,21 @@ WORKDIR /root/packages/jstatutree
 RUN ls
 RUN ~/.pyenv/shims/python setup.py install
 
-# neo4j
-RUN mkdir -p /root/packages/neo4j
-WORKDIR /root/packages/neo4j
-RUN add-apt-repository ppa:openjdk-r/ppa
-RUN wget -O - http://debian.neo4j.org/neotechnology.gpg.key >> key.pgp
-RUN apt-key add key.pgp
-RUN echo 'deb http://debian.neo4j.org/repo stable/' | tee -a /etc/apt/sources.list.d/neo4j.list > /dev/null
-RUN apt update && sudo apt install -y openjdk-8-jre-headless neo4j
-
 # hjstmodel
 WORKDIR /root/home
 RUN git clone https://github.com/Arten013/jstatutree.git /root/home/hjst_model
-
 
 # pip installs
 RUN ~/.pyenv/shims/python -m pip install -U pip
 RUN ~/.pyenv/shims/python -m pip install gensim editdistance msgpack neo4jrestclient
 #--ignore-installed
 
-RUN echo "hoge"
-
 # vim
 RUN git clone https://github.com/Arten013/dotfiles /root/dotfiles
 WORKDIR /root/dotfiles
 RUN make
 RUN nvim -c :q
-
-RUN chown root /var/lib/neo4j
-RUN chmod 750 /var/lib/neo4j
-RUN service neo4j start && service neo4j stop
+RUN echo "alias vi=nvim" >>  ~/.bashrc
+RUN echo 'alias vim=nvim' >> ~/.bashrc
 
 WORKDIR /root/home

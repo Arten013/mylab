@@ -1,17 +1,19 @@
-version: '1'
+version: '2'
 services:
   main:
-    build: main/Dockerfile
+    build: ./main
     ports:
       - '8888:8888'
       - '6006:6006'
     volumes:
       - ./../reikiset:/root/home/reikiset
       - ./../results:/root/home/results
+    depends_on:
+       - neo4j
   neo4j:
     image: neo4j
     ports:
       - '7474:7474'
       - '7687:7687'
     volumes:
-      - .neo4j/data:/data
+      - ./neo4j/data:/data
