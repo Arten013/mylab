@@ -57,7 +57,7 @@ RUN ~/.pyenv/shims/python setup.py install
 
 # hjstmodel
 WORKDIR /root/home
-RUN git clone https://github.com/Arten013/jstatutree.git /root/home/hjst_model
+RUN git clone https://github.com/Arten013/hjst_model.git /root/home/hjst_model
 
 # pip installs
 RUN ~/.pyenv/shims/python -m pip install -U pip

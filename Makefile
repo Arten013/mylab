@@ -14,6 +14,15 @@ build:
 push:
 	docker push $(IMAGE)
 
+up:
+	docker-compose up -d neo4j
+	docker-compose run main bash
+	
 run:
 	docker-compose run main bash
+
+neo:
+	docker-compose up neo4j
 	docker-compose down
+neotest:
+	docker-compose up neo4j-test
