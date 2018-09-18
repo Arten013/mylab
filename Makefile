@@ -6,8 +6,6 @@ REIKI_SRC_DIR = $(RESEARCH_DIR)/reikiset
 REIKI_TAR_DIR = /root/home/reikiset
 RES_SRC_DIR = $(RESEARCH_DIR)/results
 RES_TAR_DIR = /root/home/results
-N4J_SRC_DIR = $(RESEARCH_DIR)/neo4j
-N4J_TAR_DIR = /var/lib/neo4j
 
 build:
 	docker-compose build
@@ -15,14 +13,8 @@ push:
 	docker push $(IMAGE)
 
 up:
-	docker-compose up -d neo4j
-	docker-compose run main bash
-	
-run:
-	docker-compose run main bash
-
-neo:
-	docker-compose up neo4j
+	docker-compose up main bash
+jupyter:
+	docker-compose up main jupyter notebook
+down:
 	docker-compose down
-neotest:
-	docker-compose up neo4j-test

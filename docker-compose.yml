@@ -6,23 +6,5 @@ services:
       - '8888:8888'
       - '6006:6006'
     volumes:
-      - ./../reikiset:/root/home/reikiset
-      - ./../results:/root/home/results
-      - ~/.ssh:/root/.ssh
-    depends_on:
-       - neo4j
-  neo4j:
-    image: neo4j
-    ports:
-      - '17474:7474'
-      - '7687:7687'
-    volumes:
-      - ./neo4j/data:/data
-      - ./neo4j/conf:/conf
-  neo4j-test:
-    image: neo4j
-    ports:
-      - '17474:7474'
-      - '7687:7687'
-    volumes:
-      - ./neo4j/conf:/conf
+      - ./../reikiset:/home/jovyan/reikiset
+      - ./../results:/home/jovyan/results
