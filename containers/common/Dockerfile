@@ -7,81 +7,84 @@ USER root
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && apt-get -yq dist-upgrade \
  && apt-get install -yq --no-install-recommends \
-    wget \
+    automake \
+    autotools-dev \
+    build-essential \
     bzip2 \
     ca-certificates \
-    sudo \
-    locales \
     fonts-liberation \
+    git \
+    graphviz \
     language-pack-ja-base \
     language-pack-ja \
-    build-essential \
-    git \
-    libsqlite3-dev \
+    libboost-all-dev \
     libbz2-dev \
+    libeigen3-dev \
+    libgdbm-dev \ 
+    libgoogle-perftools-dev \
+    libgsl0-dev \
     libncurses5-dev \
-    libgdbm-dev \
     liblzma-dev \
-    libssl-dev \
-    tcl-dev \
-    tk-dev \
-    libreadline-dev \
     libmecab2 \
     libmecab-dev \
+    libprotobuf9v5 \
+    libprotobuf-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libssl-dev \
+    locales \
     mecab \
     mecab-ipadic \
     mecab-ipadic-utf8 \
     mecab-utils \
-    pkg-config \
-    libprotobuf9v5 \
+    openssh-server \
     protobuf-compiler \
-    libprotobuf-dev \
-    libgoogle-perftools-dev \
-    autotools-dev \
-    automake \
+    python3-dev \
+    pkg-config \
+    sudo \
     swig \
+    tcl-dev \
+    tk-dev \
+    tmux \
+    unzip \
+    wget \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-# RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
-    # locale-gen
-#RUN update-locale LANG=ja_JP.UTF-8 LANGUAGE="ja_JP:ja"
-RUN echo "ja_JP.UTF-8 UTF-8" > /etc/locale.gen && \
-    locale-gen
-ENV LANG ja_JP.UTF-8
-ENV LANGUAGE ja_JP:ja
-
-# init
-
-# pyenv
-# RUN git clone https://github.com/pyenv/pyenv.git ~/.pyenv
-# ENV HOME /root
-# ENV PYENV_ROOT $HOME/.pyenv
-# ENV PATH $PYENV_ROOT/bin:$PATH
-# RUN echo 'eval "$(pyenv init -)"' >> ~/.bashrc && \
-    # eval "$(pyenv init -)"
-# RUN apt install -y zlib1g-dev libssl-dev libbz2-dev
-# RUN pyenv install 3.6.4 && pyenv global 3.6.4 
-
-# Configure environment
-ENV CONDA_DIR=/opt/conda \
-    SHELL=/bin/bash \
-    NB_USER=jovyan \
-    NB_UID=1000 \
-    NB_GID=100 \
-    LC_ALL=en_US.UTF-8 \
-    LANG=en_US.UTF-8 \
-    LANGUAGE=en_US.UTF-8
-ENV PATH=$CONDA_DIR/bin:$PATH \
-    HOME=/home/$NB_USER
-
+# add command scripts
 ADD fix-permissions /usr/local/bin/fix-permissions
+
+# locale setting
+RUN echo "ja_JP.UTF-8 UTF-8" > /etc/locale.gen && locale-gen
+ENV LC_ALL=ja_JP.UTF-8 \
+    LANG=ja_JP.UTF-8 \
+    LANGUAGE=ja_JP.UTF-8
+
 # Create jovyan user with UID=1000 and in the 'users' group
 # and make sure these dirs are writable by the `users` group.
+ENV NB_USER=jovyan \
+    NB_UID=1000 \
+    NB_GID=100 
+
 RUN groupadd wheel -g 11 && \
     echo "auth required pam_wheel.so use_uid" >> /etc/pam.d/su && \
     useradd -m -s /bin/bash -N -u $NB_UID $NB_USER && \
-    mkdir -p $CONDA_DIR && \
+    chmod g+w /etc/passwd
+
+# set password for jovyan
+ADD .jovyan_passwd /
+RUN chpasswd < /.jovyan_passwd
+RUN rm /.jovyan_passwd
+
+# Configure environment
+ENV CONDA_DIR=/opt/conda \
+    SHELL=/bin/bash 
+ENV PATH=$CONDA_DIR/bin:$PATH \
+    HOME=/home/$NB_USER
+#RUN env
+#RUN conda update
+
+RUN mkdir -p $CONDA_DIR && \
     chown $NB_USER:$NB_GID $CONDA_DIR && \
     chmod g+w /etc/passwd && \
     fix-permissions $HOME && \
@@ -123,6 +126,7 @@ RUN conda install --quiet --yes 'tini=0.18.0' && \
 # Correct permissions
 # Do all this in a single RUN command to avoid duplicating all of the
 # files across image layers when the permissions change
+RUN conda install -y faiss-cpu -c pytorch
 RUN conda install --quiet --yes \
     'notebook=5.6.*' \
     'jupyterhub=0.9.*' \
@@ -138,6 +142,9 @@ RUN conda install --quiet --yes \
 
 
 USER root
+
+# install some basic libraries
+
 RUN mkdir -p /home/packages
 # cmake
 WORKDIR /home/packages
@@ -153,12 +160,6 @@ RUN mkdir -p build
 WORKDIR /home/packages/leveldb/build
 RUN cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build .
 
-# mecab
-#RUN git clone https://github.com/buruzaemon/natto-py /home/packages/natto-py
-#WORKDIR /home/packages/natto-py
-#RUN echo "" > README.rst
-#RUN /home/.pyenv/shims/python setup.py install
-# RUN cat /etc/os-release
 #sentencepiece
 RUN git clone https://github.com/google/sentencepiece /home/packages/sentencepiece
 WORKDIR /home/packages/sentencepiece
@@ -175,66 +176,57 @@ WORKDIR /home/packages/simstring
 RUN ./autogen.sh && ./configure && make && make install
 WORKDIR /home/packages/simstring/swig/python
 RUN ./prepare.sh --swig
-# RUN ~/.pyenv/shims/python setup.py build_ext && ~/.pyenv/shims/python setup.py install
 RUN python setup.py build_ext && python setup.py install
 
-
-USER $NB_UID
+# fasttext
+#RUN wget --directory-prefix=/home/packages/ https://github.com/facebookresearch/fastText/archive/v0.1.0.zip
+#RUN unzip -d /home/packages /home/packages/v0.1.0.zip
+#RUN rm /home/packages/v0.1.0.zip
+#WORKDIR /home/packages/fastText-0.1.0
+#RUN make
+RUN git clone https://github.com/facebookresearch/fastText.git /home/packages/fasttext
+RUN mkdir -p /home/packages/fasttext/build
+WORKDIR /home/packages/fasttext/build
+RUN cmake ..
+RUN make && make install
 
 # vim
 RUN git clone https://github.com/Arten013/dotfiles $HOME/dotfiles
-USER root
 WORKDIR $HOME/dotfiles
+RUN git checkout tmux
+RUN apt update
+RUN DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends apt-utils
 RUN make
-USER $NB_UID
 RUN echo "alias vi=nvim" >>  ~/.bashrc
 RUN echo 'alias vim=nvim' >> ~/.bashrc
-# pip installs
-# RUN ~/.pyenv/shims/python -m pip install -U pip
-# RUN ~/.pyenv/shims/python -m pip install gensim editdistance msgpack neo4jrestclient
-# RUN ~/.pyenv/shims/python -m pip install mecab-python3 plyvel sklearn neo4j sentencepiece
-#--ignore-installed
-RUN pip install -U pip
-RUN pip install gensim editdistance msgpack neo4jrestclient
-RUN pip install mecab-python3 plyvel sklearn neo4j sentencepiece
 
-# jstatutree
-RUN git clone https://github.com/Arten013/jstatutree.git $HOME/jstatutree
-WORKDIR $HOME/jstatutree
-RUN git checkout no_rest
-# RUN ~/.pyenv/shims/python setup.py install
-RUN python setup.py install
-
-# hjstmodel
-RUN git clone https://github.com/Arten013/hjst_model.git $HOME/hjst_model
-RUN mkdir -p $HOME/results
-WORKDIR $HOME/hjst_model
-RUN git checkout develop
-RUN ln -s $HOME/results $HOME/hjst_model/results
-
-# abconfig
-RUN git clone https://github.com/Arten013/abconfig.git $HOME/abconfig
-WORKDIR $HOME/abconfig
-RUN git checkout develop
-# RUN ~/.pyenv/shims/python setup.py install
-RUN python setup.py install
-# RUN nvim -c :q
-
+#nmslib
+USER $NB_UID
+RUN git clone https://github.com/nmslib/nmslib $HOME/nmslib
+WORKDIR $HOME/nmslib/similarity_search
+RUN cmake . -DWITH_EXTRAS=1 && make
+WORKDIR $HOME/nmslib/python_bindings
+RUN pip install -r requirements.txt
 USER root
+RUN mkdir -p $HOME/.local/lib
+RUN fix-permissions $HOME/.local/lib
+USER $NB_UID
+RUN python setup.py install
 
-EXPOSE 8888
-WORKDIR $HOME
+USER $NB_UID
 
-# Configure container startup
-ENTRYPOINT ["tini", "-g", "--"]
-CMD ["start-notebook.sh"]
+# pip install
+ADD requirements.txt $HOME/requirements.txt
+RUN pip install -U pip
+RUN grep -v '^#' $HOME/requirements.txt | xargs -n 1 -L 1 pip install
+RUN pip install /home/packages/fasttext
 
-# Add local files as late as possible to avoid cache busting
-COPY start.sh /usr/local/bin/
-COPY start-notebook.sh /usr/local/bin/
-COPY start-singleuser.sh /usr/local/bin/
-COPY jupyter_notebook_config.py /etc/jupyter/
-RUN fix-permissions /etc/jupyter/
+# setup vim
+USER root
+RUN mkdir -p $HOME/.local/share
+RUN fix-permissions $HOME/.local/share
+USER $NB_UID
+RUN nvim -c :q 1>/dev/null
 
-# Switch back to jovyan to avoid accidental container runs as root
+CMD /bin/bash
 USER $NB_UID

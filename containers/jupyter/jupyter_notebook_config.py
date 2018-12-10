@@ -14,6 +14,7 @@ c.NotebookApp.open_browser = False
 
 # https://github.com/jupyter/notebook/issues/3130
 c.FileContentsManager.delete_to_trash = False
+c.NotebookApp.token='sumomo'
 
 # Generate a self-signed certificate
 if 'GEN_CERT' in os.environ:

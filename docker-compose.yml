@@ -1,10 +1,28 @@
 version: '2'
 services:
-  main:
-    build: ./main
+  ssh_server:
+    build: ./containers/ssh_server
+    ports:
+      - '8889:8889'
+    volumes:
+      - $DATASET_PATH:/home/jovyan/dataset
+      - ./workspace/.ssh:/home/jovyan/.ssh
+      - ./workspace/notebooks:/home/jovyan/notebooks
+      - ./workspace/resources:/home/jovyan/resources
+      - ./workspace/develop:/home/jovyan/develop
+    environment:
+      - grant_sudo=yes
+    user: root
+  jupyter:
+    build: ./containers/jupyter
     ports:
       - '8888:8888'
-      - '6006:6006'
     volumes:
-      - ./../reikiset:/home/jovyan/reikiset
-      - ./../results:/home/jovyan/results
+      - $DATASET_PATH:/home/jovyan/dataset
+      - ./workspace/.ssh:/home/jovyan/.ssh
+      - ./workspace/notebooks:/home/jovyan/notebooks
+      - ./workspace/resources:/home/jovyan/resources
+      - ./workspace/develop:/home/jovyan/develop
+    environment:
+      - grant_sudo=yes
+    user: root

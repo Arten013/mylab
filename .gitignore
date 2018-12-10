@@ -1,1 +1,5 @@
-neo4j/data
+/containers/neo4j
+.env
+/workspace/
+/containers/main
+/containers/common/.jovyan_passwd

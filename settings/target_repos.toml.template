@@ -1,0 +1,13 @@
+[jstatutree]
+repo = "arten013/jstatutree"
+branch = "develop"
+depends_on = ["abconfig"]
+
+[abconfig]
+repo = "arten013/abconfig"
+branch = "develop"
+
+[replyvel]
+repo = "arten013/reikidb"
+branch = "develop"
+depends_on = ["jstatutree"]
