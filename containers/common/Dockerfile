@@ -71,10 +71,6 @@ RUN groupadd wheel -g 11 && \
     useradd -m -s /bin/bash -N -u $NB_UID $NB_USER && \
     chmod g+w /etc/passwd
 
-# set password for jovyan
-ADD .jovyan_passwd /
-RUN chpasswd < /.jovyan_passwd
-RUN rm /.jovyan_passwd
 
 # Configure environment
 ENV CONDA_DIR=/opt/conda \
@@ -227,6 +223,12 @@ RUN mkdir -p $HOME/.local/share
 RUN fix-permissions $HOME/.local/share
 USER $NB_UID
 RUN nvim -c :q 1>/dev/null
+
+# set password for users
+USER root
+ADD passwords /
+RUN chpasswd < /passwords
+RUN rm /passwords
 
 CMD /bin/bash
 USER $NB_UID

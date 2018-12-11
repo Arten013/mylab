@@ -1,4 +1,4 @@
-FROM atbell013/mylab_env
+FROM mylab_env
 
 USER root
 

@@ -3,7 +3,7 @@ services:
   ssh_server:
     build: ./containers/ssh_server
     ports:
-      - '8889:8889'
+      - '8889:22'
     volumes:
       - $DATASET_PATH:/home/jovyan/dataset
       - ./workspace/.ssh:/home/jovyan/.ssh
@@ -13,6 +13,7 @@ services:
     environment:
       - grant_sudo=yes
     user: root
+    tty: true
   jupyter:
     build: ./containers/jupyter
     ports:

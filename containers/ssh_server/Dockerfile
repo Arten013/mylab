@@ -1,20 +1,23 @@
-FROM atbell013/base_env
+FROM mylab_env
 
 USER root
 
-EXPOSE 8888
-WORKDIR $HOME
+ADD entrypoint.sh /home/entrypoint.sh
+RUN fix-permissions /home/entrypoint.sh
+RUN chmod 750 /home/entrypoint.sh
+RUN mkdir /var/run/sshd
+RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN echo "PermitUserEnvironment yes" >> /etc/ssh/sshd_config
 
-# Configure container startup
-ENTRYPOINT ["tini", "-g", "--"]
-CMD ["start-notebook.sh"]
 
-# Add local files as late as possible to avoid cache busting
-COPY start.sh /usr/local/bin/
-COPY start-notebook.sh /usr/local/bin/
-COPY start-singleuser.sh /usr/local/bin/
-COPY jupyter_notebook_config.py /etc/jupyter/
-RUN fix-permissions /etc/jupyter/
+# SSH login fix. Otherwise user is kicked off after login
+# RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+
+ENV NOTVISIBLE "in users profile"
+RUN echo "export VISIBLE=now" >> /etc/profile
 
 # Switch back to jovyan to avoid accidental container runs as root
+EXPOSE 22
 USER $NB_UID
+#CMD ["/usr/sbin/sshd", "-d"]
+CMD ["/home/entrypoint.sh"]

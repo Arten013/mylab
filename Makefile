@@ -1,27 +1,30 @@
-DOCKERHUB_USER = atbell013
-IMAGE = $(DOCKERHUB_USER)/mylab
-
-
-setup:
+deploy:
 	mkdir -p ./workspace/.ssh
 	mkdir -p ./workspace/develop
 	mkdir -p ./workspace/resources
-	ln -s ./settings/.env .env
-	ln -s ./settings/.jovyan_passwd containers/common/.jovyan_passwd
+	ln -sf settings/.env .env
+
+build_env:
+	cp settings/passwords containers/common/passwords
+	docker build -t mylab_env ./containers/common
+	rm containers/common/passwords
+
+setup:
+	make deploy
+	make setup
 
 bup:
 	make build
 	make up
 
 build:
-	docker build -t $(DOCKERHUB_USER)/mylab_env ./containers/common
 	docker-compose build
 
 push:
 	docker push $(IMAGE)
 
 up:
-	docker-compose up jupyter ssh_server
+	docker-compose up -d jupyter ssh_server
 
 down:
 	docker-compose down
