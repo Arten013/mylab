@@ -1,3 +1,5 @@
+prep_setting:
+	python ./scripts/unpack_template.py
 deploy:
 	mkdir -p ./workspace/.ssh
 	mkdir -p ./workspace/develop
