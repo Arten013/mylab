@@ -6,21 +6,21 @@ deploy:
 	mkdir -p ./workspace/resources
 	ln -sf settings/.env .env
 
-build_env:
-	cp settings/passwords containers/common/passwords
-	docker build -t mylab_env ./containers/common
-	rm containers/common/passwords
+build_core:
+	docker build -t mylab_core ./containers/core
 
 setup:
 	make deploy
-	make setup
+	make build_core
 
 bup:
 	make build
 	make up
 
 build:
+	cp settings/passwords containers/env/passwords
 	docker-compose build
+	rm containers/env/passwords
 
 push:
 	docker push $(IMAGE)

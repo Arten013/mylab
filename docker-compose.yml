@@ -1,5 +1,13 @@
-version: '2'
+version: '3'
 services:
+  env:
+    build: 
+      context: ./containers/env
+      args:
+        - LAB_USER=$LAB_USER
+        - LAB_UID=$LAB_UID
+        - LAB_GID=$LAB_GID
+        - LAB_GROPU=$LAB_GROUP
   ssh_server:
     build: ./containers/ssh_server
     ports:
@@ -12,6 +20,8 @@ services:
       - ./workspace/develop:/home/jovyan/develop
     environment:
       - grant_sudo=yes
+      - HOST_USER_ID=$HOST_USER_ID
+      - HOST_GROUP_ID=$HOST_GROUP_ID
     user: root
     tty: true
   jupyter:
@@ -26,4 +36,8 @@ services:
       - ./workspace/develop:/home/jovyan/develop
     environment:
       - grant_sudo=yes
+      - HOST_USER_ID=$HOST_USER_ID
+      - HOST_GROUP_ID=$HOST_GROUP_ID
+      - NB_UID=$HOST_USER_ID
+      - NB_GID=$HOST_GROUP_ID
     user: root
