@@ -1,3 +1,5 @@
+networkx
+dill
 gensim
 editdistance
 lxml

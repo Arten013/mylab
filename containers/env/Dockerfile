@@ -106,6 +106,11 @@ RUN pip install /home/packages/fasttext
 
 
 # pip install simstring
+User root
+RUN fix-permissions /home/packages/simstring
+USER $NB_UID
+WORKDIR /home/packages/simstring/swig/python
+
 RUN python setup.py build_ext && python setup.py install
 
 # setup vim
@@ -124,3 +129,4 @@ RUN chpasswd < /passwords
 RUN rm /passwords
 
 RUN adduser $LAB_USER sudo
+WORKDIR /home/jovyan
