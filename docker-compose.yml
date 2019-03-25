@@ -1,13 +1,13 @@
 version: '3'
 services:
   env:
-    build: 
+    build:
       context: ./containers/env
       args:
         - LAB_USER=$LAB_USER
         - LAB_UID=$LAB_UID
         - LAB_GID=$LAB_GID
-        - LAB_GROPU=$LAB_GROUP
+        - LAB_GROUP=$LAB_GROUP
   jupyter:
     build: ./containers/jupyter
     ports:

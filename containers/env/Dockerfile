@@ -90,13 +90,13 @@ RUN conda install --quiet --yes \
 USER root
 RUN mkdir -p /home/.local/lib
 RUN fix-permissions /home/.local/lib
-RUN chmod 777 -R /home/nmslib/
+#RUN chmod 777 -R /home/nmslib/
 USER $NB_UID
 
 # pip install nmslib
-WORKDIR /home/nmslib/python_bindings
-RUN pip install -r requirements.txt
-RUN python setup.py install
+# WORKDIR /home/nmslib/python_bindings
+# RUN pip install -r requirements.txt
+# RUN python setup.py install
 
 # pip install
 ADD requirements.txt $HOME/requirements.txt
@@ -120,7 +120,8 @@ RUN fix-permissions $HOME/.local/share
 USER $NB_UID
 RUN id
 RUN env
-RUN nvim -c :q 1>/dev/null
+RUN nvim -c :q
+#RUN nvim -c :q 1>/dev/null
 
 # set password for users
 USER root

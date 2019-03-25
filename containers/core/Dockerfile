@@ -116,7 +116,7 @@ RUN echo "alias vi=nvim" >>  ~/.bashrc
 RUN echo 'alias vim=nvim' >> ~/.bashrc
 
 #nmslib
-RUN git clone https://github.com/nmslib/nmslib /home/nmslib
-WORKDIR /home/nmslib/similarity_search
-RUN cmake . -DWITH_EXTRAS=1 && make
-RUN mkdir -p /home/.local/lib
+#RUN git clone https://github.com/nmslib/nmslib /home/nmslib
+#WORKDIR /home/nmslib/similarity_search
+#RUN cmake . -DWITH_EXTRAS=1 && make
+#RUN mkdir -p /home/.local/lib

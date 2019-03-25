@@ -15,5 +15,6 @@ glove_python
 seaborn
 pebble
 pyemd
+PyYAML
 graphviz
 nmslib
