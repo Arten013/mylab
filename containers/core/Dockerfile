@@ -58,7 +58,6 @@ ENV LC_ALL=ja_JP.UTF-8 \
     LANGUAGE=ja_JP.UTF-8
 
 # install some basic libraries
-
 RUN mkdir -p /home/packages
 
 # cmake
@@ -93,11 +92,6 @@ WORKDIR /home/packages/simstring/swig/python
 RUN ./prepare.sh --swig
 
 # fasttext
-#RUN wget --directory-prefix=/home/packages/ https://github.com/facebookresearch/fastText/archive/v0.1.0.zip
-#RUN unzip -d /home/packages /home/packages/v0.1.0.zip
-#RUN rm /home/packages/v0.1.0.zip
-#WORKDIR /home/packages/fastText-0.1.0
-#RUN make
 RUN git clone https://github.com/facebookresearch/fastText.git /home/packages/fasttext
 RUN mkdir -p /home/packages/fasttext/build
 WORKDIR /home/packages/fasttext/build
@@ -116,7 +110,7 @@ RUN echo "alias vi=nvim" >>  ~/.bashrc
 RUN echo 'alias vim=nvim' >> ~/.bashrc
 
 #nmslib
-#RUN git clone https://github.com/nmslib/nmslib /home/nmslib
-#WORKDIR /home/nmslib/similarity_search
-#RUN cmake . -DWITH_EXTRAS=1 && make
-#RUN mkdir -p /home/.local/lib
+RUN git clone https://github.com/nmslib/nmslib /home/nmslib
+WORKDIR /home/nmslib/similarity_search
+RUN cmake . -DWITH_EXTRAS=1 && make
+RUN mkdir -p /home/.local/lib
