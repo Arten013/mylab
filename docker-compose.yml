@@ -1,27 +1,33 @@
 version: '3'
 services:
+  core:
+    image: atbell013/mylab_core
   env:
     build:
       context: ./containers/env
       args:
         - LAB_USER=$LAB_USER
         - LAB_UID=$LAB_UID
-        - LAB_GID=$LAB_GID
-        - LAB_GROUP=$LAB_GROUP
+    depends_on:
+      - core
   jupyter:
-    build: ./containers/jupyter
+    build:
+      context: ./containers/jupyter
+      args:
+        - JUPYTER_PASS=$JUPYTER_PASS
     ports:
       - '8888:8888'
     volumes:
-      - $DATASET_PATH:/home/jovyan/dataset
-      - ./workspace/.ssh:/home/jovyan/.ssh
-      - ./workspace/notebooks:/home/jovyan/notebooks
-      - ./workspace/resources:/home/jovyan/resources
-      - ./workspace/develop:/home/jovyan/develop
+      - ./workspace/.ssh:/home/$LAB_USER/.ssh
+      - ./workspace/notebooks:/home/$LAB_USER/notebooks
+      - ./workspace/resources:/home/$LAB_USER/resources
+      - ./workspace/develop:/home/$LAB_USER/develop
     environment:
       - grant_sudo=yes
-      - HOST_USER_ID=$HOST_USER_ID
-      - HOST_GROUP_ID=$HOST_GROUP_ID
-      - NB_UID=$HOST_USER_ID
-      - NB_GID=$HOST_GROUP_ID
+      - LAB_USER=$LAB_USER
+      - LAB_UID=$LAB_UID
+      - LAB_GROUP="lab_member"
+      - LAB_GID=111
+    depends_on:
+      - env
     user: root

@@ -1,48 +1,60 @@
-FROM mylab_core
+## NLP実験用のコンテナ (by Kazuya Fujioka)
 
-# add command scripts
+## SimStringやsentencepieceなど，
+## 汚い環境でのインストールが難しいものを入れたもの．
+## jupyter notebookのサーバを立てることもできるようになっている．
+## jupyter公式のDockerfile (https://github.com/jupyter/docker-stacks)
+## をパクって作成しているので，細かい部分は分からないまま使ってる．
+
+# ベースのコンテナ
+FROM atbell013/mylab_core
+
+# 権限修正用のスクリプトを追加
 ADD fix-permissions /usr/local/bin/fix-permissions
 
-# Create jovyan user with UID=1000 and in the 'users' group
-# and make sure these dirs are writable by the `users` group.
-ARG LAB_USER="jovyan" 
+# ユーザの情報を設定ファイルから読み込み
+# 基本的に，ホスト側と整合するようにしておけばOK
+ARG LAB_USER="jovyan"
 ARG LAB_UID=1000
-ARG LAB_GROUP='lab_member'
-ARG LAB_GID=111
+ENV LAB_GROUP="lab_member"
+ENV LAB_GID=111
 
+# ユーザ情報の設定
 RUN groupadd $LAB_GROUP -g $LAB_GID
-
-ENV NB_USER=$LAB_USER \
-    NB_UID=$LAB_UID \
-    NB_GROUP=$LAB_GROUP \
-    NB_GID=$LAB_GID
-
 RUN groupadd wheel -g 11 && \
     echo "auth required pam_wheel.so use_uid" >> /etc/pam.d/su && \
-    useradd -m -s /bin/bash -g $LAB_GROUP -N -u $NB_UID $NB_USER && \
+    useradd -m -s /bin/bash -g $LAB_GROUP -N -u $LAB_UID $LAB_USER && \
     chmod g+w /etc/passwd
 
-RUN id $LAB_USER
-
-# Configure environment
+# ホームディレクトリ/condaディレクトリの設定
+# 環境変数の設定
 ENV CONDA_DIR=/opt/conda \
-    SHELL=/bin/bash 
+    SHELL=/bin/bash
 ENV PATH=$CONDA_DIR/bin:$PATH \
-    HOME=/home/$NB_USER
+    HOME=/home/$LAB_USER
+ENV DOT_LOCAL=/home/.local/
 
+# ディレクトリ作成/権限の修正
 RUN mkdir -p $CONDA_DIR && \
-    chown $NB_USER:$NB_GID $CONDA_DIR && \
-    chmod g+w /etc/passwd && \
-    fix-permissions $HOME && \
-    fix-permissions $CONDA_DIR
+    mkdir -p $DOT_LOCAL/share && \
+    mkdir -p $DOT_LOCAL/lib
+RUN chown $LAB_USER:$LAB_GID $CONDA_DIR  && \
+    chown $LAB_USER:$LAB_GID $DOT_LOCAL/share  && \
+    chown $LAB_USER:$LAB_GID $DOT_LOCAL/lib
+RUN chmod g+w /etc/passwd
+RUN fix-permissions $HOME
+RUN fix-permissions $CONDA_DIR && \
+    fix-permissions $DOT_LOCAL/share && \
+    fix-permissions $DOT_LOCAL/lib && \
+    fix-permissions /home/nmslib/python_bindings
 
-USER $NB_UID
+USER $LAB_UID
 
-# Setup work directory for backward-compatibility
-RUN mkdir /home/$NB_USER/work && \
-    fix-permissions /home/$NB_USER
+# おまじない(todo: 無くても動くかどうかを確認)
+# RUN mkdir /home/$LAB_USER/work && \
+    # fix-permissions /home/$LAB_USER
 
-# Install conda as jovyan and check the md5 sum provided on the download site
+# minicondaのインストール
 ENV MINICONDA_VERSION 4.5.4
 RUN cd /tmp && \
     wget --quiet https://repo.continuum.io/miniconda/Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh && \
@@ -55,24 +67,27 @@ RUN cd /tmp && \
     $CONDA_DIR/bin/conda install --quiet --yes conda="${MINICONDA_VERSION%.*}.*" && \
     $CONDA_DIR/bin/conda update --all --quiet --yes && \
     conda clean -tipsy && \
-    rm -rf /home/$NB_USER/.cache/yarn && \
+    rm -rf /home/$LAB_USER/.cache/yarn && \
     fix-permissions $CONDA_DIR && \
-    fix-permissions /home/$NB_USER
+    fix-permissions /home/$LAB_USER
 
 # Install Tini
 RUN conda install --quiet --yes 'tini=0.18.0' && \
     conda list tini | grep tini | tr -s ' ' | cut -d ' ' -f 1,2 >> $CONDA_DIR/conda-meta/pinned && \
     conda clean -tipsy && \
     fix-permissions $CONDA_DIR && \
-    fix-permissions /home/$NB_USER
+    fix-permissions /home/$LAB_USER
 
-# Install Jupyter Notebook, Lab, and Hub
-# Generate a notebook server config
-# Cleanup temporary files
-# Correct permissions
-# Do all this in a single RUN command to avoid duplicating all of the
-# files across image layers when the permissions change
+# faissのインストール（なぜこの位置にあるのかは忘れた）
+# faissはANNツール by FB
+# 高次元でのk-NNを高速に実行したいときに便利
 RUN conda install -y faiss-cpu -c pytorch
+
+# Jupyter Notebook, Lab, and Hubのインストール
+# notebook server config の生成
+# 一括でやっているのは，権限修正が重複して走ってしまうのを防ぐため（らしい）
+# 原文: Do all this in a single RUN command to avoid duplicating all of the
+# files across image layers when the permissions change
 RUN conda install --quiet --yes \
     'notebook=5.6.*' \
     'jupyterhub=0.9.*' \
@@ -82,21 +97,14 @@ RUN conda install --quiet --yes \
     npm cache clean --force && \
     jupyter notebook --generate-config && \
     rm -rf $CONDA_DIR/share/jupyter/lab/staging && \
-    rm -rf /home/$NB_USER/.cache/yarn && \
+    rm -rf /home/$LAB_USER/.cache/yarn && \
     fix-permissions $CONDA_DIR && \
-    fix-permissions /home/$NB_USER
+    fix-permissions /home/$LAB_USER
 
-# fix permissions
-USER root
-RUN mkdir -p /home/.local/lib
-RUN fix-permissions /home/.local/lib
-#RUN chmod 777 -R /home/nmslib/
-USER $NB_UID
-
-# pip install nmslib
-# WORKDIR /home/nmslib/python_bindings
-# RUN pip install -r requirements.txt
-# RUN python setup.py install
+# nmslibのPython bindingをインストール
+WORKDIR /home/nmslib/python_bindings
+RUN pip install -r requirements.txt
+RUN python setup.py install
 
 # pip install
 ADD requirements.txt $HOME/requirements.txt
@@ -104,30 +112,23 @@ RUN pip install -U pip
 RUN grep -v '^#' $HOME/requirements.txt | xargs -n 1 -L 1 pip install
 RUN pip install /home/packages/fasttext
 
-
-# pip install simstring
+# SimStringのPython bindingをインストール
 User root
 RUN fix-permissions /home/packages/simstring
-USER $NB_UID
+USER $LAB_UID
 WORKDIR /home/packages/simstring/swig/python
-
 RUN python setup.py build_ext && python setup.py install
 
-# setup vim
-USER root
-RUN mkdir -p $HOME/.local/share
-RUN fix-permissions $HOME/.local/share
-USER $NB_UID
-RUN id
-RUN env
+# nvimのプラグイン読み込み
 RUN nvim -c :q
 #RUN nvim -c :q 1>/dev/null
 
-# set password for users
+# ユーザのパスワード設定
 USER root
 ADD passwords /
 RUN chpasswd < /passwords
 RUN rm /passwords
 
+# ユーザをsudoerに
 RUN adduser $LAB_USER sudo
-WORKDIR /home/jovyan
+WORKDIR /home/$LAB_USER

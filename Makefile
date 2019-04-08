@@ -9,7 +9,6 @@ build:
 	docker-compose build
 	rm containers/env/passwords
 
-
 rebuild:
 	cp settings/passwords containers/env/passwords
 	docker-compose build --no-cache

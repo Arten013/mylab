@@ -1,17 +1,27 @@
 #!/bin/bash
+# 権限設定スクリプト（referenced https://github.com/jupyter/docker-stacks）
+# ユーザが書き込みしたいファイルを追加した場合に，
+# それを引数fにとって走らせるといい感じに権限を設定してくれる．
+# fとその内部の全ファイルを$LAB_GIDに所属させ，
+# そのグループのユーザに対して書き込み権限を与える．
+# 特定のユーザに対しての権限を保護したい場合には，
+# --group-add usersオプションをdocker runの時に指定．
+
 # set permissions on a directory
 # after any installation, if a directory needs to be (human) user-writable,
 # run this script on it.
-# It will make everything in the directory owned by the group $NB_GID
+# It will make everything in the directory owned by the group $LAB_GID
 # and writable by that group.
 # Deployments that want to set a specific user id can preserve permissions
 # by adding the `--group-add users` line to `docker run`.
+
+## --以下，実装寄りな話（翻訳は飽きたのでやりません）-- ##
 
 # uses find to avoid touching files that already have the right permissions,
 # which would cause massive image explosion
 
 # right permissions are:
-# group=$NB_GID
+# group=$LAB_GID
 # AND permissions include group rwX (directory-execute)
 # AND directories have setuid,setgid bits set
 
@@ -20,10 +30,10 @@ set -e
 for d in $@; do
   find "$d" \
     ! \( \
-      -group $NB_GID \
+      -group $LAB_GID \
       -a -perm -g+rwX  \
     \) \
-    -exec chgrp $NB_GID {} \; \
+    -exec chgrp $LAB_GID {} \; \
     -exec chmod g+rwX {} \;
   # setuid,setgid *on directories only*
   find "$d" \
