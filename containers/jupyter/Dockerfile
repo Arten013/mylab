@@ -14,6 +14,8 @@ COPY start.sh /usr/local/bin/
 COPY start-notebook.sh /usr/local/bin/
 COPY start-singleuser.sh /usr/local/bin/
 COPY jupyter_notebook_config.py /etc/jupyter/
+ARG JUPYTER_PASS
+RUN sed -i -e "/^c.NotebookApp.token=$/s/$/'${JUPYTER_PASS}'/g" /etc/jupyter/jupyter_notebook_config.py
 RUN fix-permissions /etc/jupyter/
 
 # Switch back to jovyan to avoid accidental container runs as root
