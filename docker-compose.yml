@@ -8,6 +8,8 @@ services:
       args:
         - LAB_USER=$LAB_USER
         - LAB_UID=$LAB_UID
+        - ROOT_PASSWORD=$ROOT_PASSWORD
+        - LAB_USER_PASSWORD=$LAB_USER_PASSWORD
     depends_on:
       - core
   jupyter:

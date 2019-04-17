@@ -124,10 +124,10 @@ RUN nvim -c :q
 #RUN nvim -c :q 1>/dev/null
 
 # ユーザのパスワード設定
+ARG ROOT_PASSWORD='password'
+ARG LAB_USER_PASSWORD='password'
 USER root
-ADD passwords /
-RUN chpasswd < /passwords
-RUN rm /passwords
+RUN echo "root:${ROOT_PASSWORD}\n${LAB_USER}:${LAB_USER_PASSWORD}" | chpasswd
 
 # ユーザをsudoerに
 RUN adduser $LAB_USER sudo

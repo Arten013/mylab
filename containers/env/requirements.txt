@@ -97,3 +97,5 @@ xlrd==1.2.0
 glove_python
 plyvel
 nmslib
+chainer
+ideep4py
