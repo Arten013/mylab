@@ -30,3 +30,5 @@ build_core:
 rebuild_core:
 	docker build -t --no-cache mylab_core ./containers/core
 
+exec:
+	docker exec -it mylab_jupyter_1 /bin/bash
