@@ -20,6 +20,7 @@ services:
     ports:
       - '8888:8888'
     volumes:
+      - ./workspace/.kaggle:/home/$LAB_USER/.kaggle
       - ./workspace/.ssh:/home/$LAB_USER/.ssh
       - ./workspace/notebooks:/home/$LAB_USER/notebooks
       - ./workspace/resources:/home/$LAB_USER/resources
