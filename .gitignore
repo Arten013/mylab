@@ -1,6 +1,7 @@
 /containers/neo4j
 passwords
 .DS_Store
+.env
 
 /workspace/
 /containers/main

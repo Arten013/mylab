@@ -5,6 +5,11 @@ USER root
 EXPOSE 8888
 WORKDIR $HOME
 
+WORKDIR $SPARK_HOME
+RUN cp ./conf/spark-env.sh.template ./conf/spark-env.sh
+RUN echo 'export PYSPARK_DRIVER_PYTHON=jupyter' >> ./conf/spark-env.sh
+RUN echo 'PYSPARK_DRIVER_PYTHON_OPTS="notebook"' >> ./conf/spark-env.sh
+
 # Configure container startup
 ENTRYPOINT ["tini", "-g", "--"]
 CMD ["start-notebook.sh"]
@@ -18,10 +23,6 @@ ARG JUPYTER_PASS
 RUN sed -i -e "/^c.NotebookApp.token=$/s/$/'${JUPYTER_PASS}'/g" /etc/jupyter/jupyter_notebook_config.py
 RUN fix-permissions /etc/jupyter/
 
-WORKDIR $SPARK_HOME
-RUN cp ./conf/spark-env.sh.template ./conf/spark-env.sh
-RUN echo 'export PYSPARK_DRIVER_PYTHON=jupyter' >> ./conf/spark-env.sh
-RUN echo 'PYSPARK_DRIVER_PYTHON_OPTS="notebook"' >> ./conf/spark-env.sh
 
 # Switch back to jovyan to avoid accidental container runs as root
 USER $LAB_UID

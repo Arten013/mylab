@@ -33,14 +33,37 @@ services:
       - LAB_GID=111
     depends_on:
       - env
+    user: root
+
+  jupyter-spark:
+    build:
+      context: ./containers/jupyter_spark
+      args:
+        - JUPYTER_PASS=$JUPYTER_PASS
+    ports:
+      - '8889:8889'
+    volumes:
+      - ./workspace/.kaggle:/home/$LAB_USER/.kaggle
+      - ./workspace/.ssh:/home/$LAB_USER/.ssh
+      - ./workspace/notebooks:/home/$LAB_USER/notebooks
+      - ./workspace/resources:/home/$LAB_USER/resources
+      - ./workspace/develop:/home/$LAB_USER/develop
+    environment:
+      - grant_sudo=yes
+      - LAB_USER=$LAB_USER
+      - LAB_UID=$LAB_UID
+      - LAB_GROUP="lab_member"
+      - LAB_GID=111
+    depends_on:
+      - env
       - master
     user: root
 
   master:
-    # image: semantive/spark
-    build:
-      context: ./containers/spark
-    command: bin/spark-class org.apache.spark.deploy.master.Master -h master
+    image: mylab_env
+    # build:
+    #   context: ./containers/spark
+    command: /home/spark/bin/spark-class org.apache.spark.deploy.master.Master -h master
     hostname: master
     environment:
       MASTER: spark://master:7077
@@ -58,10 +81,10 @@ services:
       - worker2
 
   worker1:
-    # image: semantive/spark
+    image: mylab_env
     build:
       context: ./containers/spark
-    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://master:7077
+    command: /home/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://master:7077
     hostname: worker1
     environment:
       SPARK_CONF_DIR: /conf
@@ -76,10 +99,10 @@ services:
       - ./workspace/spark/data:/tmp/data
 
   worker2:
-    # image: semantive/spark
+    image: mylab_env
     build:
       context: ./containers/spark
-    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://master:7077
+    command: /home/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://master:7077
     hostname: worker2
     environment:
       SPARK_CONF_DIR: /conf

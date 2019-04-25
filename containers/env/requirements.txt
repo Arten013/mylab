@@ -99,3 +99,5 @@ plyvel
 nmslib
 chainer
 ideep4py
+kaggle
+pyspark
