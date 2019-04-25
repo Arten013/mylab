@@ -33,4 +33,62 @@ services:
       - LAB_GID=111
     depends_on:
       - env
+      - master
     user: root
+
+  master:
+    # image: semantive/spark
+    build:
+      context: ./containers/spark
+    command: bin/spark-class org.apache.spark.deploy.master.Master -h master
+    hostname: master
+    environment:
+      MASTER: spark://master:7077
+      SPARK_CONF_DIR: /conf
+      SPARK_PUBLIC_DNS: localhost
+    ports:
+      - 4040:4040
+      - 6066:6066
+      - 7077:7077
+      - 8080:8080
+    volumes:
+      - ./workspace/spark/data:/tmp/data
+    links:
+      - worker1
+      - worker2
+
+  worker1:
+    # image: semantive/spark
+    build:
+      context: ./containers/spark
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://master:7077
+    hostname: worker1
+    environment:
+      SPARK_CONF_DIR: /conf
+      SPARK_WORKER_CORES: 4
+      SPARK_WORKER_MEMORY: 2g
+      SPARK_WORKER_PORT: 8881
+      SPARK_WORKER_WEBUI_PORT: 8081
+      SPARK_PUBLIC_DNS: localhost
+    ports:
+      - 8081:8081
+    volumes:
+      - ./workspace/spark/data:/tmp/data
+
+  worker2:
+    # image: semantive/spark
+    build:
+      context: ./containers/spark
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://master:7077
+    hostname: worker2
+    environment:
+      SPARK_CONF_DIR: /conf
+      SPARK_WORKER_CORES: 4
+      SPARK_WORKER_MEMORY: 2g
+      SPARK_WORKER_PORT: 8882
+      SPARK_WORKER_WEBUI_PORT: 8082
+      SPARK_PUBLIC_DNS: localhost
+    ports:
+      - 8082:8082
+    volumes:
+      - ./workspace/spark/data:/tmp/data

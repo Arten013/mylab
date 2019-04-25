@@ -10,6 +10,9 @@ bup:
 up:
 	docker-compose up -d jupyter
 
+up-spark:
+	docker-compose up -d jupyter spark_master spark_worker1 spark_worker2
+
 down:
 	docker-compose down
 
